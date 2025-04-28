@@ -1,0 +1,42 @@
+clc;
+clear;
+sym=10000;//No . of symbols
+M=4;
+data1=grand(1,sym,"uin",0,1);//Random Symbol  generation from 0 to 1 with uniform distribution
+for j=1:2:length(data1)// Seperation of I & Q component
+i_phase=2*data1(j)-1;// BPSK modulation of I phase component
+q_phase=2*data1(j+1)-1;//BPSKmodulation of Q phase component
+end
+bpsk_mod=2*data1-1;//BPSKModulated signal
+snr=1:10;//Signal to Noise Ratio
+for k=1:1:length(snr)
+noise=1/sqrt(2)*(10^(-(k/20)))*(rand(1, length(bpsk_mod), 'normal')+%i*(rand(1, length(bpsk_mod),'normal')));//White  Gaussian Noise generation for BPSK
+rec1_bpsk= bpsk_mod+noise;//BPSK modulated signal over AWGN channel
+rec_data_bpsk=[];
+for i=1:1:length(data1)//BPSKDemodulation
+  if real(rec1_bpsk(i))>=0
+ demod_out_bpsk=1;
+ else real(rec1_bpsk(i))<0
+ demod_out_bpsk=0;
+  end
+ rec_data_bpsk=[rec_data_bpsk 
+ demod_out_bpsk];//BPSKDemodulated  signal
+ end
+  errA=0;errB=0;
+ for i=1:sym
+ if rec_data_bpsk(i)==data1(i)
+errB=errB;
+else
+errB=errB+1;
+end
+ BER_bpsk(k)=errB/sym;//BER of BPSK
+end
+end
+theoryBer = 0.5*erfc(sqrt(10.^(snr/10)));
+disp(theoryBer); // Theoritical BER of BPSK
+disp(BER_bpsk);// experimental BER of BPSK
+  snr=1:1:10;
+ plot2d(snr,BER_bpsk,5,logflag="nl");//plot simulated  BER of BPSK over AWGN channel
+ mtlb_axis([0 20 10^-5 0.5]);//axis
+ xgrid(10);
+ xtitle( 'Bit Error Rate plot for BPSK Modulation','SNR', 'BER');
